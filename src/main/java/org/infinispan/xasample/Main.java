@@ -17,7 +17,7 @@ public class Main {
    public static void main(String[] args) throws Exception {
       Configuration configuration = new Configuration();
       configuration.fluent().mode(Configuration.CacheMode.LOCAL).transaction().
-            transactionManagerLookupClass(JBossStandaloneJTAManagerLookup.class);
+            transactionManagerLookupClass(JBossStandaloneJTAManagerLookup.class).recovery();
 
       DefaultCacheManager dcm = new DefaultCacheManager(configuration);
       Cache cache = dcm.getCache();
@@ -28,6 +28,21 @@ public class Main {
       TransactionManager transactionManager = advancedCache.getTransactionManager();
       transactionManager.begin();
       cache.put("k", "v");
-      transactionManager.commit();
+      transactionManager.getTransaction().enlistResource(new DummyXAResource());
+      transactionManager.getTransaction().enlistResource(new DummyXAResource());
+      try {
+         transactionManager.commit();
+      } catch (Exception e) {
+         e.printStackTrace();
+      }
+
+      System.out.println("Main.main");
+
+      new RecoveryRunner().runRecovery(cache);
+
+      while (true) {
+         Thread.sleep(1000);
+         System.out.println("Main.main ...");
+      }
    }
 }

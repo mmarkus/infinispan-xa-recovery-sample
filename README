@@ -1,0 +1,2 @@
+1. compile: mvn install
+2.     run: mvn exec:java -Dexec.mainClass="org.infinispan.xasample.Main" -e
